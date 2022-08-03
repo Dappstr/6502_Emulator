@@ -75,16 +75,24 @@ struct Memory
 
 	// Read/Get byte
 	template <typename T = u32>
-	u8 operator[](T address) const noexcept(noexcept(address > -1)) {
+	inline u8 operator[](T address) const noexcept(noexcept(address > -1)) {
 		assert(address < MAX_MEMORY);
 		return Data[address];
 	}
 
 	// Write/Set byte
 	template <typename T = u32>
-	u8& operator[](T address) noexcept(noexcept(address > -1)) {
+	inline u8& operator[](T address) noexcept(noexcept(address > -1)) {
 		assert(address < MAX_MEMORY);
 		return Data[address];
+	}
+
+	// Will be used to write more than 8 bits
+	void writeBytes(u32& cycles, u16 value, u32 address)
+	{
+		Data[address] = value & 0xff;
+		Data[address + 1] = (value >> 8);
+		cycles -= 2;
 	}
 };
 
@@ -135,8 +143,10 @@ struct CPU
 	{
 		u16 data = memory[PC]; // Will get the first 8 bits
 		PC++;
+
 		data |= (memory[PC] << 8); // Shift upwards by 8 bits (memory[PC] * 2^8)
-		cycles -= 2; // Decrement two cycles, one for the Program Counter and one for the bit shifting
+		PC++;
+		cycles -= 2; // Decrement two cycles
 		return data;
 	}
 
@@ -179,8 +189,13 @@ struct CPU
 				}
 			case INSTRUCTIONS.INS_JSR_ABSOLUTE:
 				{
-					u16 
-					
+					u16 subRtnAddr = fetchAbsoluteAddressing(cycles, memory);
+					memory.writeBytes(cycles, SP, PC - 1);
+					memory[SP] = PC - 1;
+					cycles--;
+					PC = subRtnAddr;
+					cycles--;
+					SP++;
 					break;
 				}
 				default:
