@@ -141,10 +141,10 @@ struct CPU
 
 	u16 fetchAbsoluteAddressing(u32& cycles, Memory& memory) // Used for absolute addressing where instructions contain a 16 bit address to identify target location
 	{
-		u16 data = memory[PC]; // Will get the first 8 bits
+		u16 data = memory[PC]; // Will get the first 8 bits (low byte)
 		PC++;
 
-		data |= (memory[PC] << 8); // Shift upwards by 8 bits (memory[PC] * 2^8)
+		data |= (memory[PC] << 8); //Data's value will be the first 8 bits determined by the first assignment, and then the bits will be set after shifting memory[PC] by 8 bits. Type promotion from 8 bits to 16 bits is also inferred to accomodate for the shifting of 8 bits
 		PC++;
 		cycles -= 2; // Decrement two cycles
 		return data;
